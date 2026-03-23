@@ -20,7 +20,7 @@ void help_menu() {
     std::cout << "VCS - Help Menu";
 }
 void version_menu() {
-    std::cout << "VCS - Version" << VCS_VERSION_NUM << "\n";
+    std::cout << "VCS - Version " << VCS_VERSION_NUM << "\n";
     std::cout << "Find the most up-to-date version of VCS at https://github.com/lefkovitzj/vcs\n";
 }
 
@@ -32,15 +32,11 @@ int main(int argc, char **argv) {
     std::vector<std::string> args = parse_command(command_str);
 
     if (! args.empty() and args.size() == 1) {
-        if (args.at(0) == "help") {
+        if (args.at(0) == "-h" || args.at(0) == "help") {
             help_menu();
         }
-        else if (args.at(0) == "version") {
+        else if (args.at(0) == "-v") {
             version_menu();
-        }
-        else if (args.at(0) == "exit") {
-            // Terminate the program.
-            return 0;
         }
     }
     std::cout << "\n";
