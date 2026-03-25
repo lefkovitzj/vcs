@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <filesystem>
 
 const float VCS_VERSION_NUM = 0.1;
 
@@ -37,9 +38,28 @@ int main(int argc, char **argv) {
     }
     else if (base_cmd == "add") {
         std::cout << "Args: ";
+        std::vector<std::string> filesToAdd;
+        bool addAll = false;
         if (args.size() > 1) {
             for (int i = 1; i < args.size(); i++) {
-                std::cout << "'" << args[i] <<"' ";
+                if (args[i] == ".") {
+                    addAll = true;
+                }
+                else {
+                    filesToAdd.push_back(args[i]);
+                }
+            }
+            if (addAll) {
+                {
+                    for (std::filesystem::recursive_directory_iterator i("."), end; i != end; ++i)
+                        if (!is_directory(i->path()))
+                            std::cout << i->path() << "\n";
+                }
+            }
+            else {
+                for (int i=0; i<filesToAdd.size(); i++) {
+                    std::cout << filesToAdd.at(i) << "\n";
+                }
             }
         }
         else {
