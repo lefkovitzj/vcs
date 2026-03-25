@@ -5,15 +5,8 @@
 
 const float VCS_VERSION_NUM = 0.1;
 
-std::vector<std::string> parse_command(std::string command) {
-    // Read args from command.
-    std::vector<std::string> args;
-    std::istringstream iss(command);
-    std::string arg;
-    while (iss >> arg) {
-        args.push_back(arg);
-    }
-    return args;
+void err_out(std::string err_msg) {
+    std::cerr << "vcs/> Error: " << err_msg;
 }
 
 void help_menu() {
@@ -25,18 +18,32 @@ void version_menu() {
 }
 
 int main(int argc, char **argv) {
-    std::string command_str;
+    std::vector<std::string> args;
     for (int i = 1; i < argc; i++) {
-        command_str = argv[i];
+        args.push_back(argv[i]);
     }
-    std::vector<std::string> args = parse_command(command_str);
+    if (args.empty()) {
+        err_out("No argument given");
+        return 0;
+    }
+    std::string base_cmd = args.at(0);
 
-    if (! args.empty() and args.size() == 1) {
-        if (args.at(0) == "-h" || args.at(0) == "help") {
-            help_menu();
+
+    if (base_cmd == "-h" || base_cmd == "help") {
+        help_menu();
+    }
+    else if (base_cmd == "-v" || base_cmd == "version") {
+        version_menu();
+    }
+    else if (base_cmd == "add") {
+        std::cout << "Args: ";
+        if (args.size() > 1) {
+            for (int i = 1; i < args.size(); i++) {
+                std::cout << "'" << args[i] <<"' ";
+            }
         }
-        else if (args.at(0) == "-v") {
-            version_menu();
+        else {
+            err_out("'add' requires one or more arguments");
         }
     }
     std::cout << "\n";
