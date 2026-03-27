@@ -4,27 +4,34 @@
 #include <vector>
 #include <filesystem>
 #include <fstream>
+#include <format>
 
 const float VCS_VERSION_NUM = 0.1;
+const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
+
+// Store the path at which the VCS data is found.
+const std::filesystem::path vcs_dir = std::filesystem::current_path() / ".vcs";
+bool vcs_inited = std::filesystem::is_directory(vcs_dir);
 
 void err_out(std::string err_msg) {
-    std::cerr << "vcs/> Error: " << err_msg;
+    std::cerr << "vcs/> Error: " << err_msg << "\n";
+}
+void info_out(std::string info_msg) {
+    std::cout << "vcs/> " << info_msg << "\n";
 }
 
 void help_menu() {
-    std::cout << "vcs/> Help Menu";
+    info_out("Help menu");
 }
 void version_menu() {
-    std::cout << "vcs/> Version " << VCS_VERSION_NUM << "\n";
-    std::cout << "Find the most up-to-date version of VCS at https://github.com/lefkovitzj/vcs\n";
+    info_out(std::format("Version {}", VCS_VERSION_NUM));
+    info_out(std::format("Find the most up-to-date version of VCS at {}", VCS_SOURCE_URL));
 }
 void init_vcs() {
-    std::cout << "vcs/> Initialize VCS\n";
-    // Get the path at which to build the filestructure within the .vcs directory.
-    std::filesystem::path vcs_dir = std::filesystem::current_path() / ".vcs";
+    info_out("Initializing VCs...");
 
     // Ensure vcs not yet init. If not, create the .vcs directory.
-    if (std::filesystem::exists(vcs_dir) || std::filesystem::is_directory(vcs_dir)) {
+    if (vcs_inited) {
         err_out("Could not initialize VCS - already present in this directory");
         return;
     }
@@ -55,7 +62,9 @@ void init_vcs() {
         err_out("Could not create VCS index file");
         return;
     }
-    std::cout << "vcs/> VCS initialized successfully";
+
+    vcs_inited = true;
+    info_out("VCS initialized successfully");
 }
 
 int main(int argc, char **argv) {
@@ -83,6 +92,9 @@ int main(int argc, char **argv) {
         std::cout << "Args: ";
         std::vector<std::string> filesToAdd;
         bool addAll = false;
+        if (! vcs_inited) {
+            err_out("Cannot add files - VCS not initialized yet");
+        }
         if (args.size() > 1) {
             for (int i = 1; i < args.size(); i++) {
                 if (args[i] == ".") {
@@ -111,6 +123,5 @@ int main(int argc, char **argv) {
             err_out("'add' requires one or more arguments");
         }
     }
-    std::cout << "\n";
     return 0;
 }
