@@ -6,19 +6,16 @@
 #include <fstream>
 #include <format>
 
+#include "io.h"
+
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
 
 // Store the path at which the VCS data is found.
 const std::filesystem::path vcs_dir = std::filesystem::current_path() / ".vcs";
 bool vcs_inited = std::filesystem::is_directory(vcs_dir);
-
-void err_out(std::string err_msg) {
-    std::cerr << "vcs/> Error: " << err_msg << "\n";
-}
-void info_out(std::string info_msg) {
-    std::cout << "vcs/> " << info_msg << "\n";
-}
+std::string user_name =  "";
+std::string user_email = "";
 
 void help_menu() {
     info_out("Help menu");
@@ -26,6 +23,19 @@ void help_menu() {
 void version_menu() {
     info_out(std::format("Version {}", VCS_VERSION_NUM));
     info_out(std::format("Find the most up-to-date version of VCS at {}", VCS_SOURCE_URL));
+}
+void handle_config(std::vector<std::string> args) {
+    if (args.size() <= 2) {
+        // Display current config.
+    }
+    else {
+        if (args.at(1) == "user.name") {
+            user_name = args.at(2);
+        }
+        if (args.at(1) == "user.email") {
+            user_email = args.at(2);
+        }
+    }
 }
 void init_vcs() {
     info_out("Initializing VCs...");
@@ -78,12 +88,14 @@ int main(int argc, char **argv) {
     }
     std::string base_cmd = args.at(0);
 
-
     if (base_cmd == "-h" || base_cmd == "help") {
         help_menu();
     }
     else if (base_cmd == "-v" || base_cmd == "version") {
         version_menu();
+    }
+    else if (base_cmd == "--config") {
+        handle_config(args);
     }
     else if (base_cmd == "init") {
         init_vcs();
