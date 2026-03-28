@@ -139,6 +139,9 @@ int main(int argc, char **argv) {
             err_out("'add' requires one or more arguments");
         }
     }
+    else {
+        err_out(std::format("No such argument {}", base_cmd));
+    }
 
     // Store final state of configuration variables.
     store_config(vcs_dir, user_name, user_email);
