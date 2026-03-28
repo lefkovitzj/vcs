@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(vcs main.cpp
         io.h
-        io.cpp)
+        io.cpp
+        config.h
+        config.cpp)

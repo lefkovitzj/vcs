@@ -6,6 +6,7 @@
 #include <fstream>
 #include <format>
 
+#include "config.h"
 #include "io.h"
 
 const float VCS_VERSION_NUM = 0.1;
@@ -73,15 +74,8 @@ void init_vcs() {
         return;
     }
 
-    // Create the index file.
-    std::ofstream vcsConfigFile(vcs_dir / "config");
-    if (vcsConfigFile.is_open()) {
-        vcsConfigFile << "[user]\n\tname = " << user_name << "\n\temail = " << user_email << "\n";
-    }
-    else {
-        err_out("Could not create VCS index file");
-        return;
-    }
+    // Create the config file.
+    store_config(vcs_dir, user_name, user_email);
 
     vcs_inited = true;
     info_out("VCS initialized successfully");
@@ -145,5 +139,10 @@ int main(int argc, char **argv) {
             err_out("'add' requires one or more arguments");
         }
     }
+
+    // Store final state of configuration variables.
+    store_config(vcs_dir, user_name, user_email);
+
+    // Exit successfully.
     return 0;
 }
