@@ -73,6 +73,16 @@ void init_vcs() {
         return;
     }
 
+    // Create the index file.
+    std::ofstream vcsConfigFile(vcs_dir / "config");
+    if (vcsConfigFile.is_open()) {
+        vcsConfigFile << "[user]\n\tname = " << user_name << "\n\temail = " << user_email << "\n";
+    }
+    else {
+        err_out("Could not create VCS index file");
+        return;
+    }
+
     vcs_inited = true;
     info_out("VCS initialized successfully");
 }
