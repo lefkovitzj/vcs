@@ -75,7 +75,8 @@ void init_vcs() {
     }
 
     // Create the config file.
-    store_config(vcs_dir, user_name, user_email);
+    vcs_config init_config = {user_name, user_email};
+    store_config(vcs_dir, init_config);
 
     vcs_inited = true;
     info_out("VCS initialized successfully");
@@ -90,6 +91,12 @@ int main(int argc, char **argv) {
         err_out("No argument given\n");
         return 0;
     }
+
+    // Load config, if applicable.
+    vcs_config read_config = load_config(vcs_dir);
+    user_name = read_config.user_name;
+    user_email = read_config.user_email;
+
     std::string base_cmd = args.at(0);
 
     if (base_cmd == "-h" || base_cmd == "help") {
@@ -144,7 +151,8 @@ int main(int argc, char **argv) {
     }
 
     // Store final state of configuration variables.
-    store_config(vcs_dir, user_name, user_email);
+    vcs_config final_config = {user_name, user_email};
+    store_config(vcs_dir, final_config);
 
     // Exit successfully.
     return 0;
