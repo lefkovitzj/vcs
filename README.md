@@ -14,6 +14,7 @@ Build a lightweight Git-inspired VCS to better understand core concepts:
 
 - Object storage (blob/tree/commit-like structures)
 - Content-addressing and hashing
+- Local configuration
 - Staging/index behavior
 - Commit history traversal
 - Basic branching and checkout semantics
@@ -21,6 +22,7 @@ Build a lightweight Git-inspired VCS to better understand core concepts:
 ## Planned Command Surface (Draft)
 
 - `vcs init`
+- `vcs config <user.name|user.email>`
 - `vcs add <path>`
 - `vcs commit -m "message"`
 - `vcs status`
@@ -41,11 +43,15 @@ This list is intentionally tentative and may evolve as internals are implemented
     heads/
   HEAD
   index
+  config
 ```
 
 ### Core Modules (Planned)
 
 - `hashing`: object IDs and content hashing
+- `compression`: compress data with Huffman coding
+- `config`: configuring the local vcs instance
+- `io`: input and logging utilities 
 - `objects`: read/write serialized objects
 - `index`: staging area format + updates
 - `commits`: commit creation and parent links
@@ -58,6 +64,8 @@ The project currently contains a minimal CMake + C++ scaffold:
 
 - `CMakeLists.txt`
 - `main.cpp`
+- `io.cpp`
+- `config.cpp`
 
 ## Build and Run
 
@@ -69,8 +77,8 @@ cmake --build build
 
 ## Near-Term Milestones
 
-- [ ] Replace placeholder `main.cpp` with CLI argument parsing
-- [ ] Implement `vcs init` to create `.vcs` directory structure
+- [x] Replace placeholder `main.cpp` with CLI argument parsing
+- [x] Implement `vcs init` to create `.vcs` directory structure
 - [ ] Add object hashing + write/read roundtrip
 - [ ] Implement basic `add` staging flow
 - [ ] Implement first working `commit`
