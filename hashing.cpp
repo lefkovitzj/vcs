@@ -1,9 +1,10 @@
 /**
-* @file config.cpp
- * @brief System configuration utilities for VCS.
+* @file hashing.cpp
+ * @brief Hashing utilities for the VCS.
  *
- * Implement both read and write of vcs configuration
- * stored in the .vcs/config file.
+ * Implement a SHA-1 hash algorithm for use in the VCS
+ * tool. This is a utility used in computing the filepath
+ * at which to save ojects.
  *
  * @author Joseph Lefkovitz (httsp://github.com/lefkovitzj)
  */
@@ -11,7 +12,6 @@
 #include <bitset>
 #include <cstdint>
 #include <string>
-#include <math.h>
 #include <vector>
 
 std::vector<uint8_t> sha1_pad(std::string input_str) {
