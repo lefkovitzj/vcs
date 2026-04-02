@@ -7,4 +7,6 @@ add_executable(vcs main.cpp
         io.h
         io.cpp
         config.h
-        config.cpp)
+        config.cpp
+        hashing.h
+        hashing.cpp)
