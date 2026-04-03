@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "io.h"
+#include "hashing.h"
 
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
