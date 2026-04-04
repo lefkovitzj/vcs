@@ -10,6 +10,8 @@
 #include <bitset>
 #include <filesystem>
 #include <format>
+#include <fstream>
+#include <iostream>
 #include <queue>
 #include <string>
 #include <map>
@@ -201,4 +203,51 @@ std::string convertBytestToBinString(std::vector<uint8_t> input_bytes) {
         }
     }
     return binString;
+}
+
+void compressFile(std::filesystem::path src_file, std::filesystem::path dst_file) {
+    /* Compress a source file into a destination file using Huffman coding. */
+    if (std::filesystem::exists(src_file)) {
+        std::ifstream srcFile(src_file, std::ios::binary);
+        if (srcFile.is_open()) {
+            std::string lines((std::istreambuf_iterator<char>(srcFile)),
+                                   std::istreambuf_iterator<char>());
+            srcFile.close();
+            std::map<char, int> fr = buildHuffmanFrequencyMap(lines);
+            for (auto const& [ch, count] : fr) {
+                std::cout << "'" << ch << "': " << count << std::endl;
+            }
+            Node* huffmanTree = buildHuffmanTree(fr);
+            std::string encoded = huffmanEncode(lines, huffmanTree);
+            binConversion encoded_bin = convertBinStringToBytes(encoded);
+
+            std::ofstream dstFile(dst_file, std::ios::binary);
+            if (dstFile.is_open()) {
+                // Write map size.
+                uint32_t mapSize = static_cast<uint32_t>(fr.size());
+                dstFile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
+
+                // Write padding bits.
+                dstFile.write(reinterpret_cast<const char*>(&encoded_bin.padding_bits), sizeof(encoded_bin.padding_bits));
+
+                // Write huffman tree data.
+                for (auto const& [ch, count] : fr) {
+                    dstFile.put(ch);
+                    dstFile.write(reinterpret_cast<const char*>(&count), sizeof(count));
+                }
+
+                // Write encoded data.
+                dstFile.write(reinterpret_cast<const char*>(encoded_bin.bytes.data()), encoded_bin.bytes.size());
+            }
+            else {
+                err_out("Could not open destination file.");
+            }
+        }
+        else {
+            err_out("Could not open source file.");
+        }
+    }
+    else {
+        err_out("Source file does not exist.");
+    }
 }
