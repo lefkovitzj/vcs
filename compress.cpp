@@ -7,11 +7,14 @@
  * @author Joseph Lefkovitz (httsp://github.com/lefkovitzj)
  */
 
+#include <cstdint>
 #include <format>
 #include <iostream>
 #include <queue>
 #include <string>
 #include <unordered_map>
+
+#include "io.h"
 
 struct Node {
     /* Store a node in the Huffman tree. */
@@ -113,4 +116,53 @@ std::string huffmanDecode(std::string encoded_str, Node* huffmanTreeRoot) {
         }
     }
     return decoded_str;
+}
+
+std::vector<uint8_t> convertBinStringToBytes(std::string input_str) {
+    std::vector<uint8_t> bytes;
+    uint8_t current_byte = 0;
+    int processed_bits = 0;
+
+    // Process a byte at a time.
+    for (char ch : input_str) {
+        // Shift left one bit.
+        current_byte <<= 1;
+        if (ch == '1') {
+            current_byte |= 1;
+        }
+        else if (ch != '0') {
+            err_out("Invalid Binary String - terminating early.");
+            return bytes;
+        }
+        processed_bits++;
+        if (processed_bits == 8) {
+            bytes.push_back(current_byte);
+            current_byte = 0;
+            processed_bits = 0;
+        }
+    }
+
+    // Handle any remaining bits to fill a byte.
+    if (processed_bits < 8 && processed_bits != 0) {
+        // Shift left to fill the byte.
+        current_byte <<= (8-processed_bits);
+        bytes.push_back(current_byte);
+    }
+    return bytes;
+}
+
+std::string convertBytestToBinString(std::vector<uint8_t> input_bytes) {
+    std::string binString = "";
+    for (uint8_t b : input_bytes) {
+        for (int i = 7; i >= 0; i--) {
+            bool lastBit = (b >> i) & 1;
+            if (lastBit) {
+                binString += "1";
+            }
+            else {
+                binString += "0";
+            }
+        }
+    }
+    return binString;
 }
