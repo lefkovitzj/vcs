@@ -7,33 +7,44 @@
  * @author Joseph Lefkovitz (httsp://github.com/lefkovitzj)
  */
 
-#include <cstdint>
+#include <bitset>
+#include <filesystem>
 #include <format>
-#include <iostream>
 #include <queue>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 #include "io.h"
 
 struct Node {
-    /* Store a node in the Huffman tree. */
+    // Store character and frequency.
     char ch;
     int fr;
+    // Unique ID to break comparison ties
+    uint64_t sequence_id;
+    // Store child nodes.
     Node *left;
     Node *right;
-    Node(char ch, int fr) : ch(ch), fr(fr), left(nullptr), right(nullptr) {}
-    Node(char ch, int fr, Node* left, Node* right) : ch(ch), fr(fr), left(left), right(right) {}
+
+    // Constructors.
+    Node(char ch, int fr, uint64_t id)
+        : ch(ch), fr(fr), sequence_id(id), left(nullptr), right(nullptr) {}
+    Node(char ch, int fr, uint64_t id, Node* left, Node* right)
+        : ch(ch), fr(fr), sequence_id(id), left(left), right(right) {}
 };
 
 struct compareNodes {
-    /* Compare two nodes */
     bool operator()(Node *left, Node *right) {
-        return left->fr > right->fr;
+        // Compare by frequency.
+        if (left->fr != right->fr) {
+            return left->fr > right->fr;
+        }
+        // If frequencies are tied, consistently give lower ID higher priority.
+        return left->sequence_id > right->sequence_id;
     }
 };
 
-void getCodes(Node* root, std::string codeStr, std::unordered_map<char, std::string>& huffmanCode) {
+void getCodes(Node* root, std::string codeStr, std::map<char, std::string>& huffmanCode) {
     /* Get all the Huffman codes from the root of a Huffman tree and insert into the map. */
     // Handle null case.
     if (root == nullptr) {
@@ -50,17 +61,25 @@ void getCodes(Node* root, std::string codeStr, std::unordered_map<char, std::str
     getCodes(root->right, codeStr + "1", huffmanCode);
 }
 
-Node* buildHuffmanTree(std::string input_str) {
+std::map<char, int> buildHuffmanFrequencyMap(std::string input_str) {
+    /* Build a Huffman frequency map from a string. */
     // Store all characters in a frequency map.
-    std::unordered_map<char, int> fr;
+    std::map<char, int> fr;
     for (char ch :input_str) {
         fr[ch]++;
     }
+    return fr;
+}
 
+Node* buildHuffmanTree(std::map<char, int> fr) {
+    /* Create a Huffman tree from a frequency map. */
     // Create and store all characters in a priority queue.
     std::priority_queue<Node*, std::vector<Node*>, compareNodes> pq;
+    uint64_t id_counter = 0;
     for (auto pair : fr) {
-        pq.push(new Node(pair.first, pair.second));
+        // Increase the ID counter and add the node to the queue.
+        id_counter++;
+        pq.push(new Node(pair.first, pair.second, id_counter));
     }
 
     // Process all nodes in the priority queue.
@@ -70,8 +89,10 @@ Node* buildHuffmanTree(std::string input_str) {
         Node* r = pq.top();
         pq.pop();
 
+        // Create the internal node for these two child nodes (and increase the ID counter).
         int f_sum = l->fr + r->fr;
-        pq.push(new Node('\0', f_sum, l, r));
+        id_counter++;
+        pq.push(new Node('\0', f_sum, id_counter, l, r));
     }
 
     // Return the root of the Huffman tree.
@@ -80,7 +101,8 @@ Node* buildHuffmanTree(std::string input_str) {
 }
 
 std::string huffmanEncode(std::string input_str, Node* huffmanTree) {
-    std::unordered_map<char, std::string> huffmanCode;
+    /* Encode a string based on a Huffman tree. */
+    std::map<char, std::string> huffmanCode;
 
     // Get the Huffman codes.
     getCodes(huffmanTree, "", huffmanCode);
@@ -95,6 +117,7 @@ std::string huffmanEncode(std::string input_str, Node* huffmanTree) {
 }
 
 std::string huffmanDecode(std::string encoded_str, Node* huffmanTreeRoot) {
+    /* Decode a string based on a Huffman tree. */
     // Begin Huffman tree traversal from the root.
     Node* current = huffmanTreeRoot;
 
@@ -118,7 +141,14 @@ std::string huffmanDecode(std::string encoded_str, Node* huffmanTreeRoot) {
     return decoded_str;
 }
 
-std::vector<uint8_t> convertBinStringToBytes(std::string input_str) {
+struct binConversion {
+    // Store both a vector of bytes and the number of padding bits added to the last byte.
+    std::vector<uint8_t> bytes;
+    int padding_bits;
+};
+
+binConversion convertBinStringToBytes(std::string input_str) {
+    /* Convert a string representation of the binary to an array of bytes. */
     std::vector<uint8_t> bytes;
     uint8_t current_byte = 0;
     int processed_bits = 0;
@@ -132,9 +162,12 @@ std::vector<uint8_t> convertBinStringToBytes(std::string input_str) {
         }
         else if (ch != '0') {
             err_out("Invalid Binary String - terminating early.");
-            return bytes;
+            return binConversion(bytes, 0);
         }
+        // Mark another bit processed.
         processed_bits++;
+
+        // If we have processed a full byte, move on to the next byte.
         if (processed_bits == 8) {
             bytes.push_back(current_byte);
             current_byte = 0;
@@ -142,16 +175,19 @@ std::vector<uint8_t> convertBinStringToBytes(std::string input_str) {
         }
     }
 
-    // Handle any remaining bits to fill a byte.
+    // Handle any padding bits to fill the final byte.
+    int padding_bits = 0;
     if (processed_bits < 8 && processed_bits != 0) {
         // Shift left to fill the byte.
         current_byte <<= (8-processed_bits);
+        padding_bits = 8-processed_bits;
         bytes.push_back(current_byte);
     }
-    return bytes;
+    return binConversion(bytes, padding_bits);
 }
 
 std::string convertBytestToBinString(std::vector<uint8_t> input_bytes) {
+    /* Convert an array of bytes to a string representation of the binary. */
     std::string binString = "";
     for (uint8_t b : input_bytes) {
         for (int i = 7; i >= 0; i--) {
