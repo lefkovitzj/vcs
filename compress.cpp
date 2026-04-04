@@ -215,9 +215,6 @@ void compressFile(std::filesystem::path src_file, std::filesystem::path dst_file
                                    std::istreambuf_iterator<char>());
             srcFile.close();
             std::map<char, int> fr = buildHuffmanFrequencyMap(lines);
-            for (auto const& [ch, count] : fr) {
-                std::cout << "'" << ch << "': " << count << std::endl;
-            }
             Node* huffmanTree = buildHuffmanTree(fr);
             std::string encoded = huffmanEncode(lines, huffmanTree);
             binConversion encoded_bin = convertBinStringToBytes(encoded);
