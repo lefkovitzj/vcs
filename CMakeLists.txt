@@ -9,4 +9,6 @@ add_executable(vcs main.cpp
         config.h
         config.cpp
         hashing.h
-        hashing.cpp)
+        hashing.cpp
+        compress.h
+        compress.cpp)
