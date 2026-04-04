@@ -8,6 +8,7 @@
  */
 
 #include <bitset>
+#include <cstdint>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -238,6 +239,65 @@ void compressFile(std::filesystem::path src_file, std::filesystem::path dst_file
 
                 // Write encoded data.
                 dstFile.write(reinterpret_cast<const char*>(encoded_bin.bytes.data()), encoded_bin.bytes.size());
+            }
+            else {
+                err_out("Could not open destination file.");
+            }
+        }
+        else {
+            err_out("Could not open source file.");
+        }
+    }
+    else {
+        err_out("Source file does not exist.");
+    }
+}
+
+void decompressFile(std::filesystem::path src_file, std::filesystem::path dst_file) {
+    /* Decompress a source file into a destination file using Huffman coding. */
+    if (std::filesystem::exists(src_file)) {
+        std::ifstream srcFile(src_file, std::ios::binary);
+        if (srcFile.is_open()) {
+            // Read map size.
+            uint32_t mapSize = 0;
+            srcFile.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
+
+            // Read the padding bits from the top of the file.
+            int padding_bits_value = 0;
+            srcFile.read(reinterpret_cast<char*>(&padding_bits_value), sizeof(padding_bits_value));
+
+            // Read the frequency map back in.
+            std::map<char, int> fr;
+            for (uint32_t i = 0; i < mapSize; i++) {
+                char ch;
+                int count;
+
+                srcFile.get(ch);
+                srcFile.read(reinterpret_cast<char*>(&count), sizeof(count));
+                fr[ch] = count;
+            }
+            // Use that read frequency map to regenerate the Huffman tree.
+            Node* huffmanTree = buildHuffmanTree(fr);
+
+            // Read the rest of the file as binary.
+            std::vector<uint8_t> compressedBytes((std::istreambuf_iterator<char>(srcFile)), std::istreambuf_iterator<char>());
+
+            // Convert to a binary string.
+            std::string binString = convertBytestToBinString(compressedBytes);
+
+            // Remove padding.
+            if (padding_bits_value > 0 && binString.size() >= padding_bits_value) {
+                binString.erase(binString.size() - padding_bits_value);
+            }
+
+            // Decode the binary string using the Huffman tree.
+            std::string decoded = huffmanDecode(binString, huffmanTree);
+
+            // Write the decoded data to the dstFile.
+            std::ofstream dstFile(dst_file, std::ios::binary);
+            if (dstFile.is_open()) {
+                dstFile<<decoded;
+                dstFile.close();
             }
             else {
                 err_out("Could not open destination file.");
