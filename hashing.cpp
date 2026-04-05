@@ -35,12 +35,12 @@ uint32_t rotateLeftN(uint32_t value, unsigned int n) {
     return (value << n) | (value >> (32 - n));
 }
 
-std::vector<uint8_t> sha1_pad(std::string input_str) {
+std::vector<uint8_t> sha1_pad(const std::vector<uint8_t>& input_data) {
     /* The initial padding phase of the SHA-1 hash algorithm. */
-    uint64_t len_bits = input_str.length() * 8;
+    uint64_t len_bits = static_cast<uint64_t>(input_data.size()) * 8;
 
     // Copy input str into buffer.
-    std::vector<uint8_t> buffer(input_str.begin(), input_str.end());
+    std::vector<uint8_t> buffer = input_data;
 
     // Add '1' bit to the buffer (10000000 byte = 128 in base_10).
     buffer.push_back(128);
@@ -70,9 +70,9 @@ std::string sha1_digest_to_string(uint32_t hash_digest[5]) {
     return return_stream.str();
 }
 
-std::string sha1(std::string input_str) {
+std::string sha1(const std::vector<uint8_t>& input_data) {
     // Step 1: Pad the input and create the byte buffer.
-    std::vector<uint8_t> buffer = sha1_pad(input_str);
+    std::vector<uint8_t> buffer = sha1_pad(input_data);
 
     // Define constants - specified by SHA-1 Standard
     // State variables h0-h4.

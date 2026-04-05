@@ -5,6 +5,6 @@
 #ifndef VCS_HASHING_H
 #define VCS_HASHING_H
 
-std::string sha1(std::string input_str);
+std::string sha1(const std::vector<uint8_t>& input_data);
 
 #endif //VCS_HASHING_H
