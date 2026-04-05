@@ -106,6 +106,38 @@ std::string hash_blob(std::filesystem::path local_file) {
     return "";
 }
 
+void add_file(std::filesystem::path file) {
+    if (! vcs_inited) {
+        err_out("Cannot add file - VCS not initialized yet");
+    }
+    if (! std::filesystem::exists(file)) {
+        err_out(std::format("File {} does not exist", file.string()));
+        return;
+    }
+    if (std::filesystem::is_directory(file)) {
+        // Handle directories.
+        for (std::filesystem::recursive_directory_iterator i(file), end; i != end; ++i) {
+            add_file(i->path());
+        }
+    }
+    else {
+        // Handle files.
+        std::string blob_hash = hash_blob(file);
+        if (blob_hash.empty()) {
+            err_out(std::format("{}",blob_hash));
+        }
+        else {
+            // Get the directory (prefix) and filepath (remainder) from the blob hash string.
+            std::string hash_prefix = blob_hash.substr(0, 2);
+            std::string hash_noprefix = blob_hash.substr(2);
+            if (! std::filesystem::exists(vcs_dir / "objects"/ hash_prefix)) {
+                std::filesystem::create_directory(vcs_dir / "objects" / hash_prefix);
+            }
+            compressFile(file, vcs_dir / "objects" / hash_prefix / hash_noprefix);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     std::vector<std::string> args;
     for (int i = 1; i < argc; i++) {
@@ -136,8 +168,7 @@ int main(int argc, char **argv) {
         init_vcs();
     }
     else if (base_cmd == "add") {
-        std::cout << "Args: ";
-        std::vector<std::string> filesToAdd;
+        std::vector<std::filesystem::path> filesToAdd;
         bool addAll = false;
         if (! vcs_inited) {
             err_out("Cannot add files - VCS not initialized yet");
@@ -155,15 +186,15 @@ int main(int argc, char **argv) {
                 {
                     for (std::filesystem::recursive_directory_iterator i("."), end; i != end; ++i) {
                         if (!is_directory(i->path())) {
-                            std::cout << i->path() << "\n";
+                            std::cout << i->path().string() << std::endl;
+                            //filesToAdd.push_back(i->path());
                         }
                     }
                 }
             }
-            else {
-                for (int i=0; i<filesToAdd.size(); i++) {
-                    std::cout << filesToAdd.at(i) << "\n";
-                }
+
+            for (int i=0; i<filesToAdd.size(); i++) {
+                add_file(filesToAdd[i]);
             }
         }
         else {
