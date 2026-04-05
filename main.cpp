@@ -9,6 +9,7 @@
 #include "config.h"
 #include "io.h"
 #include "hashing.h"
+#include "compress.h"
 
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
@@ -81,6 +82,28 @@ void init_vcs() {
 
     vcs_inited = true;
     info_out("VCS initialized successfully");
+}
+
+std::string hash_blob(std::filesystem::path local_file) {
+    /* Create the hash for a blob at the given path. */
+    int f_size = std::filesystem::file_size(local_file);
+    std::string header = std::format("blob {}\0", f_size);
+
+    std::vector<uint8_t> blob;
+    for (char c : header) {
+        blob.push_back(static_cast<uint8_t>(c));
+    }
+    std::ifstream file(local_file, std::ios::binary);
+
+    std::vector<uint8_t> f_bytes(f_size);
+    if (file.read(reinterpret_cast<char *>(f_bytes.data()), f_size)) {
+        blob.insert(blob.end(), f_bytes.begin(), f_bytes.end());
+        return sha1(blob);
+    }
+    else {
+        err_out(std::format("File {} could not be hashed as blob.", local_file.string()));
+    }
+    return "";
 }
 
 int main(int argc, char **argv) {
