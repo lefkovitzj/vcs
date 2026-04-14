@@ -1,0 +1,11 @@
+# VCS Ignore.
+
+# Test file rule.
+compress.h
+
+# Test directory rule.
+.git/
+cmake-build-debug/
+
+# Test wildcard rule.
+*.md

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -40,6 +41,83 @@ void handle_config(std::vector<std::string> args) {
         }
     }
 }
+
+bool in_vcsno(std::filesystem::path file) {
+    /* Parse the root .vcsno file into rules, ignoring comments. */
+    static bool rules_preloaded = false;
+    static std::vector<std::string> vcsno_indirs;
+    static std::vector<std::string> vcsno_files;
+    static std::vector<std::string> vcsno_wilds;
+
+    if (! rules_preloaded) {
+        std::ifstream vcsnoFile(std::filesystem::current_path() / ".vcsno", std::ios::binary);
+        std::string line;
+        if (vcsnoFile.is_open()) {
+            // Read non-comment (marked by #) lines into the vcsno_rules.
+            while (std::getline(vcsnoFile, line)) {
+                if (! line.starts_with("#")) {
+                    // Split by " ".
+                    std::stringstream ss(line);
+                    std::string rule;
+                    while (ss >> rule) {
+                        std::replace(rule.begin(), rule.end(), '\\', '/');
+                        if (rule.starts_with("*")) {
+                            // Wildcard rule.
+                            vcsno_wilds.push_back(rule);
+                        }
+                        else if (rule.find("/") != std::string::npos) {
+                            // Directory rule.
+                            vcsno_indirs.push_back(rule);
+                        }
+                        else {
+                            // File rule.
+                            vcsno_files.push_back(rule);
+                        }
+                    }
+                }
+            }
+        }
+        rules_preloaded = true;
+    }
+
+    // Compare file against rules.
+    std::filesystem::path rel_path = std::filesystem::relative(file, std::filesystem::current_path());
+    std::string f_name = file.filename().generic_string();
+    std::string f_relative_path = rel_path.generic_string();
+
+    // File (local path) rule.
+    for (std::string vcsno_f : vcsno_files) {
+        // Check that the path matches the rule.
+        if (vcsno_f == f_name) {
+            return true;
+        }
+    }
+    // Directory (or absolute path) rule.
+    for (std::string vcsno_d : vcsno_indirs) {
+        // Normalize the rule: "bin/" becomes "bin".
+        std::string clean_rule = vcsno_d;
+        if (!clean_rule.empty() && clean_rule.back() == '/') {
+            clean_rule.pop_back();
+        }
+
+        // Match if it's the directory itself or a child of the directory.
+        if (f_relative_path == clean_rule || f_relative_path.starts_with(clean_rule + "/")) {
+            return true;
+        }
+    }
+    for (std::string vcsno_w : vcsno_wilds) {
+        // Remove the '*' character.
+        vcsno_w.erase(0, 1);
+        // Check that the path ends with the wildcard.
+        if (f_relative_path.ends_with(vcsno_w)) {
+            return true;
+        }
+    }
+
+    // Not targeted by any rule in the .vcsno file.
+    return false;
+}
+
 void init_vcs() {
     info_out("Initializing VCs...");
 
@@ -55,6 +133,12 @@ void init_vcs() {
 
     // Create refs/heads subfolder.
     std::filesystem::create_directories(vcs_dir / "refs/heads");
+
+    // Create the .vcsno file.
+    std::ofstream vcsnoFile(std::filesystem::current_path() / ".vcsno");
+    if (vcsnoFile.is_open()) {
+        vcsnoFile << "# VCS - Add any files you want to ignore to this file.";
+    }
 
     // Create the HEAD file.
     std::ofstream headFile(vcs_dir / "HEAD");
@@ -86,24 +170,25 @@ void init_vcs() {
 
 std::string hash_blob(std::filesystem::path local_file) {
     /* Create the hash for a blob at the given path. */
-    int f_size = std::filesystem::file_size(local_file);
-    std::string header = std::format("blob {}\0", f_size);
+    uintmax_t f_size = std::filesystem::file_size(local_file);
+    std::string header = std::format("blob {}", f_size) + '\0';
 
     std::vector<uint8_t> blob;
     for (char c : header) {
         blob.push_back(static_cast<uint8_t>(c));
     }
     std::ifstream file(local_file, std::ios::binary);
-
     std::vector<uint8_t> f_bytes(f_size);
-    if (file.read(reinterpret_cast<char *>(f_bytes.data()), f_size)) {
-        blob.insert(blob.end(), f_bytes.begin(), f_bytes.end());
-        return sha1(blob);
+
+    if (f_size > 0) {
+        if (!file.read(reinterpret_cast<char *>(f_bytes.data()), f_size)) {
+            err_out(std::format("File {} could not be read.", local_file.string()));
+            return "";
+        }
     }
-    else {
-        err_out(std::format("File {} could not be hashed as blob.", local_file.string()));
-    }
-    return "";
+    blob.insert(blob.end(), f_bytes.begin(), f_bytes.end());
+    return sha1(blob);
+
 }
 
 void add_file(std::filesystem::path file) {
@@ -114,10 +199,22 @@ void add_file(std::filesystem::path file) {
         err_out(std::format("File {} does not exist", file.string()));
         return;
     }
+    // Check that the file is not a part of the .vcs data.
+    if (std::filesystem::exists(vcs_dir) && std::filesystem::equivalent(file, vcs_dir)) {
+        return;
+    }
+    if (file.string().find(".vcs") != std::string::npos) {
+        return;
+    }
+
+    // Check that the file is not set to ignore based on the .vcsno file.
+    if (in_vcsno(file)) {
+        return;
+    }
     if (std::filesystem::is_directory(file)) {
         // Handle directories.
-        for (std::filesystem::recursive_directory_iterator i(file), end; i != end; ++i) {
-            add_file(i->path());
+        for (const auto& entry : std::filesystem::directory_iterator(file)) {
+            add_file(entry.path());
         }
     }
     else {
@@ -168,33 +265,17 @@ int main(int argc, char **argv) {
         init_vcs();
     }
     else if (base_cmd == "add") {
-        std::vector<std::filesystem::path> filesToAdd;
-        bool addAll = false;
         if (! vcs_inited) {
             err_out("Cannot add files - VCS not initialized yet");
         }
         if (args.size() > 1) {
-            for (int i = 1; i < args.size(); i++) {
-                if (args[i] == ".") {
-                    addAll = true;
-                }
-                else {
-                    filesToAdd.push_back(args[i]);
-                }
-            }
-            if (addAll) {
-                {
-                    for (std::filesystem::recursive_directory_iterator i("."), end; i != end; ++i) {
-                        if (!is_directory(i->path())) {
-                            std::cout << i->path().string() << std::endl;
-                            //filesToAdd.push_back(i->path());
-                        }
-                    }
-                }
-            }
+            for (size_t i = 1; i < args.size(); i++) {
+                // If they pass '.', we use current_path(), otherwise the specific path
+                std::filesystem::path p = (args[i] == ".")
+                    ? std::filesystem::current_path()
+                    : std::filesystem::path(args[i]);
 
-            for (int i=0; i<filesToAdd.size(); i++) {
-                add_file(filesToAdd[i]);
+                add_file(p);
             }
         }
         else {

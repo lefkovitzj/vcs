@@ -208,6 +208,11 @@ std::string convertBytestToBinString(std::vector<uint8_t> input_bytes) {
 
 void compressFile(std::filesystem::path src_file, std::filesystem::path dst_file) {
     /* Compress a source file into a destination file using Huffman coding. */
+    // Just create an empty file at the destination and return for empty files.
+    if (std::filesystem::file_size(src_file) == 0) {
+        std::ofstream empty_file(dst_file, std::ios::binary);
+        return;
+    }
     if (std::filesystem::exists(src_file)) {
         std::ifstream srcFile(src_file, std::ios::binary);
         if (srcFile.is_open()) {
@@ -252,6 +257,11 @@ void compressFile(std::filesystem::path src_file, std::filesystem::path dst_file
 
 void decompressFile(std::filesystem::path src_file, std::filesystem::path dst_file) {
     /* Decompress a source file into a destination file using Huffman coding. */
+    // Just create an empty file at the destination and return for empty files.
+    if (std::filesystem::file_size(src_file) == 0) {
+        std::ofstream empty_file(dst_file, std::ios::binary);
+        return;
+    }
     if (std::filesystem::exists(src_file)) {
         std::ifstream srcFile(src_file, std::ios::binary);
         if (srcFile.is_open()) {
