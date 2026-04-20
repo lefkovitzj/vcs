@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -11,6 +10,7 @@
 #include "io.h"
 #include "hashing.h"
 #include "compress.h"
+#include "index.h"
 
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
@@ -20,6 +20,9 @@ const std::filesystem::path vcs_dir = std::filesystem::current_path() / ".vcs";
 bool vcs_inited = std::filesystem::is_directory(vcs_dir);
 std::string user_name =  "";
 std::string user_email = "";
+
+std::vector<std::string> index_file_paths;
+std::vector<std::string> index_file_blobs;
 
 void help_menu() {
     info_out("Help menu");
@@ -168,7 +171,7 @@ void init_vcs() {
     info_out("VCS initialized successfully");
 }
 
-std::string hash_blob(std::filesystem::path local_file) {
+std::string hash_file_blob(std::filesystem::path local_file) {
     /* Create the hash for a blob at the given path. */
     uintmax_t f_size = std::filesystem::file_size(local_file);
     std::string header = std::format("blob {}", f_size) + '\0';
@@ -219,7 +222,7 @@ void add_file(std::filesystem::path file) {
     }
     else {
         // Handle files.
-        std::string blob_hash = hash_blob(file);
+        std::string blob_hash = hash_file_blob(file);
         if (blob_hash.empty()) {
             err_out(std::format("{}",blob_hash));
         }
@@ -227,10 +230,15 @@ void add_file(std::filesystem::path file) {
             // Get the directory (prefix) and filepath (remainder) from the blob hash string.
             std::string hash_prefix = blob_hash.substr(0, 2);
             std::string hash_noprefix = blob_hash.substr(2);
+
+            std::filesystem::path blob_path = vcs_dir / "objects" / hash_prefix / hash_noprefix;
+            index_file_paths.push_back(file.string());
+            index_file_blobs.push_back(blob_path.string());
+
             if (! std::filesystem::exists(vcs_dir / "objects"/ hash_prefix)) {
                 std::filesystem::create_directory(vcs_dir / "objects" / hash_prefix);
             }
-            compressFile(file, vcs_dir / "objects" / hash_prefix / hash_noprefix);
+            compressFile(file, blob_path);
         }
     }
 }
@@ -277,6 +285,7 @@ int main(int argc, char **argv) {
 
                 add_file(p);
             }
+            make_index(vcs_dir / "index", user_name, user_email, index_file_paths, index_file_blobs);
         }
         else {
             err_out("'add' requires one or more arguments");
