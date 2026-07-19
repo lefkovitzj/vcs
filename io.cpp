@@ -15,7 +15,11 @@ void err_out(std::string err_msg) {
     /* Output an error from VCS. */
     std::cerr << "vcs/> Error: " << err_msg << "\n";
 }
-void info_out(std::string info_msg) {
+void info_out(std::string info_msg, bool no_prefix=false) {
     /* Output info from VCS. */
-    std::cout << "vcs/> " << info_msg << "\n";
+    if (no_prefix) {
+        std::cout << info_msg << "\n";
+    } else {
+        std::cout << "vcs/> " << info_msg << "\n";
+    }
 }
