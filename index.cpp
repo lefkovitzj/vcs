@@ -14,6 +14,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <map>
 
 void make_index(std::filesystem::path index_path, std::string user_name, std::string user_email, std::vector<std::string> file_paths, std::vector<std::string> file_blob_hashes) {
     /* Create a blob index from the args passed from the main VCS loop. */
@@ -68,4 +69,30 @@ void make_index(std::filesystem::path index_path, std::string user_name, std::st
     if (indexFile.is_open()) {
         indexFile << index_content;
     }
+}
+
+std::map<std::string, std::string> get_index_as_map(std::filesystem::path index_path) {
+    /* Get a map of the files and blobs in the index */
+
+    // Get the list of files in index.
+    std::map<std::string, std::string> indexed_files;
+    std::ifstream indexFile(index_path);
+    if (indexFile.is_open()) {
+        // Parse the file contents.
+        std::string line;
+        std::getline(indexFile, line); // Skip the second line (user name).
+        std::getline(indexFile, line); // Skip the third line (user email).
+        while (std::getline(indexFile, line)) {
+            // Split each line into file path and blob path about the Unit Separator.
+            size_t delimiter_pos = line.find('\x1f');
+            if (delimiter_pos != std::string::npos) {
+                std::string file_path = line.substr(0, delimiter_pos);
+                std::string blob_path = line.substr(delimiter_pos + 1);
+
+                // Add the line to the map.
+                indexed_files.insert({file_path, blob_path});
+            }
+        }
+    }
+    return indexed_files;
 }

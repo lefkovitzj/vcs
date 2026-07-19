@@ -13,4 +13,6 @@ add_executable(vcs main.cpp
         compress.h
         compress.cpp
         index.cpp
-        index.h)
+        index.h
+        head.cpp
+        head.h)
