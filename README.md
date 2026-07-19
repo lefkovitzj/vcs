@@ -2,12 +2,6 @@
 
 This repository is an in-progress implementation outline for a custom VCS written in C++.
 
-## Status
-
-- Early scaffold stage
-- Architecture and feature scope are subject to change
-- Current executable is a bootstrap placeholder
-
 ## Project Goal
 
 Build a lightweight Git-inspired VCS to better understand core concepts:
@@ -21,14 +15,14 @@ Build a lightweight Git-inspired VCS to better understand core concepts:
 
 ## Planned Command Surface (Draft)
 
-- `vcs init`
-- `vcs config <user.name|user.email>`
-- `vcs add <path>`
-- `vcs commit -m "message"`
-- `vcs status`
-- `vcs log`
-- `vcs branch <name>`
-- `vcs checkout <name|commit>`
+- [x] `vcs init`
+- [x] `vcs config <user.name|user.email>`
+- [x] `vcs add <path>`
+- [ ] `vcs commit -m "message"`
+- [x] `vcs status`
+- [ ] `vcs log`
+- [ ] `vcs branch <name>`
+- [ ] `vcs checkout <name|commit>`
 
 This list is intentionally tentative and may evolve as internals are implemented.
 
@@ -46,26 +40,16 @@ This list is intentionally tentative and may evolve as internals are implemented
   config
 ```
 
-### Core Modules (Planned)
+### Core Components (Planned)
 
 - `hashing`: object IDs and content hashing
-- `compression`: compress data with Huffman coding
+- `compress`: compress data with Huffman coding
 - `config`: configuring the local vcs instance
 - `io`: input and logging utilities 
-- `objects`: read/write serialized objects
+- `head`: refs, branches, and HEAD
 - `index`: staging area format + updates
 - `commits`: commit creation and parent links
-- `refs`: branches and HEAD resolution
-- `commands`: CLI command handlers
-
-## Current Workspace
-
-The project currently contains a minimal CMake + C++ scaffold:
-
-- `CMakeLists.txt`
-- `main.cpp`
-- `io.cpp`
-- `config.cpp`
+- `commands`: directory for command implementations (init, add, commit, etc.)
 
 ## Build and Run
 
@@ -75,14 +59,10 @@ cmake --build build
 ./build/vcs
 ```
 
-## Near-Term Milestones
-
-- [x] Replace placeholder `main.cpp` with CLI argument parsing
-- [x] Implement `vcs init` to create `.vcs` directory structure
-- [ ] Add object hashing + write/read roundtrip
-- [ ] Implement basic `add` staging flow
-- [ ] Implement first working `commit`
-
 ## Notes
 
-This README is a living outline and will be updated as architecture decisions solidify.
+This project is intended primarily as a learning experience, through which I can better understand the inner workings of version control systems like Git. 
+
+Not all features will be implemented, and some may be simplified or omitted for educational purposes. This is never intended to be a production-ready VCS, but rather a sandbox for exploring the concepts and mechanics behind version control.
+
+While C would be ideal for making a professional VCS, C++ is chosen here for its balance of performance and ease of use, especially for rapid prototyping and experimentation, though some lower-level pointer manipulation was required, especially with compression and hashing.
