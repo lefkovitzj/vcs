@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "io.h"
+#include "../utils/io.h"
 
 std::map<std::string, std::string> get_head_as_map(std::filesystem::path vcs_dir) {
     /* Get a map of the files and blobs in the HEAD ref */

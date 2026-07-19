@@ -7,12 +7,12 @@
 #include <format>
 #include <map>
 
-#include "config.h"
-#include "io.h"
-#include "hashing.h"
-#include "head.h"
-#include "compress.h"
-#include "index.h"
+#include "core/config.h"
+#include "utils/io.h"
+#include "utils/hashing.h"
+#include "core/head.h"
+#include "utils/compress.h"
+#include "core/index.h"
 
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";

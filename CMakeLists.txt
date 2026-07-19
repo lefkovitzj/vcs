@@ -4,15 +4,15 @@ project(vcs)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(vcs main.cpp
-        io.h
-        io.cpp
-        config.h
-        config.cpp
-        hashing.h
-        hashing.cpp
-        compress.h
-        compress.cpp
-        index.cpp
-        index.h
-        head.cpp
-        head.h)
+        utils/io.h
+        utils/io.cpp
+        core/config.h
+        core/config.cpp
+        utils/hashing.h
+        utils/hashing.cpp
+        utils/compress.h
+        utils/compress.cpp
+        core/index.cpp
+        core/index.h
+        core/head.cpp
+        core/head.h)
