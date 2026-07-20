@@ -7,12 +7,18 @@
 #include <format>
 #include <map>
 
-#include "core/config.h"
-#include "utils/io.h"
-#include "utils/hashing.h"
-#include "core/head.h"
+/* Utils Imports */
 #include "utils/compress.h"
+#include "utils/hashing.h"
+#include "utils/io.h"
+
+/* Core Imports */
+#include "core/config.h"
+#include "core/head.h"
 #include "core/index.h"
+
+/* Command Imports */
+#include "commands/init.h"
 
 const float VCS_VERSION_NUM = 0.1;
 const std::string VCS_SOURCE_URL = "https://github.com/lefkovitzj/vcs";
@@ -123,64 +129,6 @@ bool in_vcsno(std::filesystem::path file) {
     return false;
 }
 
-void init_vcs() {
-    info_out("Initializing VCs...");
-
-    // Ensure vcs not yet init. If not, create the .vcs directory.
-    if (vcs_inited) {
-        err_out("Could not initialize VCS - already present in this directory");
-        return;
-    }
-    std::filesystem::create_directory(vcs_dir);
-
-    // Create objects subfolder.
-    std::filesystem::create_directory(vcs_dir / "objects");
-
-    // Create refs/heads subfolder.
-    std::filesystem::create_directories(vcs_dir / "refs/heads");
-
-    // Create the .vcsno file.
-    std::ofstream vcsnoFile(std::filesystem::current_path() / ".vcsno");
-    if (vcsnoFile.is_open()) {
-        vcsnoFile << "# VCS - Add any files you want to ignore to this file.";
-    }
-
-    // Create the HEAD file(s).
-    std::ofstream headFile(vcs_dir / "HEAD");
-    if (headFile.is_open()) {
-        headFile << "ref: refs/heads/main";
-    }
-    else {
-        err_out("Could not create head file");
-        return;
-    }
-    std::ofstream headFileMain(vcs_dir / "refs/heads/main");
-    if (headFileMain.is_open()) {
-        headFileMain << "";
-    }
-    else {
-        err_out("Could not create head file for main branch");
-        return;
-    }
-
-
-    // Create the index file.
-    std::ofstream vcsIndexFile(vcs_dir / "index");
-    if (vcsIndexFile.is_open()) {
-        vcsIndexFile << "VCS - " << VCS_VERSION_NUM << "\n";
-    }
-    else {
-        err_out("Could not create VCS index file");
-        return;
-    }
-
-    // Create the config file.
-    vcs_config init_config = {user_name, user_email};
-    store_config(vcs_dir, init_config);
-
-    vcs_inited = true;
-    info_out("VCS initialized successfully");
-}
 
 std::string hash_file_blob(std::filesystem::path local_file) {
     /* Create the hash for a blob at the given path. */
@@ -349,7 +297,7 @@ int main(int argc, char **argv) {
         handle_config(args);
     }
     else if (base_cmd == "init") {
-        init_vcs();
+        init_vcs(vcs_inited, vcs_dir, user_name, user_email);
     }
     else if (base_cmd == "status") {
         if (! vcs_inited) {

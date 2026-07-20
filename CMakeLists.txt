@@ -15,4 +15,7 @@ add_executable(vcs main.cpp
         core/index.cpp
         core/index.h
         core/head.cpp
-        core/head.h)
+        core/head.h
+        commands/init.cpp
+        commands/init.h
+        commands/init.cpp)
