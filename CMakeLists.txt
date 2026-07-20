@@ -24,4 +24,6 @@ add_executable(vcs main.cpp
         core/vcsno.cpp
         core/vcsno.h
         commands/status.cpp
-        commands/status.h)
+        commands/status.h
+        commands/add.cpp
+        commands/add.h)
