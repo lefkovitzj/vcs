@@ -22,4 +22,6 @@ add_executable(vcs main.cpp
         core/blob.cpp
         core/blob.h
         core/vcsno.cpp
-        core/vcsno.h)
+        core/vcsno.h
+        commands/status.cpp
+        commands/status.h)
