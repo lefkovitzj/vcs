@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
                 // If they pass '.', we use current_path(), otherwise the specific path
                 std::filesystem::path p = (args[i] == ".")
                     ? std::filesystem::current_path()
-                    : std::filesystem::path(args[i]);
+                    : std::filesystem::absolute(std::filesystem::path(args[i]));
 
                 add_file(p);
             }
