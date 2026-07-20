@@ -1,5 +1,3 @@
 # VCS - Add any files you want to ignore to this file.
 .git/
 cmake-build-debug/
-
-.vcs/

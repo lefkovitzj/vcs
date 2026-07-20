@@ -125,6 +125,11 @@ bool in_vcsno(std::filesystem::path file) {
         }
     }
 
+    // Disallow self-tracking of the .vcs directory.
+    if (f_relative_path == ".vcs" || f_relative_path.starts_with(".vcs/")) {
+        return true;
+    }
+
     // Not targeted by any rule in the .vcsno file.
     return false;
 }
