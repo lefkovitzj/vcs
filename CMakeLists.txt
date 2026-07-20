@@ -20,4 +20,6 @@ add_executable(vcs main.cpp
         commands/init.h
         commands/init.cpp
         core/blob.cpp
-        core/blob.h)
+        core/blob.h
+        core/vcsno.cpp
+        core/vcsno.h)
