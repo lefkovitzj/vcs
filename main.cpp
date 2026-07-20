@@ -1,3 +1,11 @@
+/* @file main.cpp
+* @brief Main entry point for the VCS application.
+*
+* Initialize the VCS environment and handle user commands.
+*
+* @author Joseph Lefkovitz (https://github.com/lefkovitzj)
+*/
+
 #include <algorithm>
 #include <string>
 #include <sstream>
@@ -13,6 +21,7 @@
 #include "utils/io.h"
 
 /* Core Imports */
+#include "core/blob.h"
 #include "core/config.h"
 #include "core/head.h"
 #include "core/index.h"
@@ -132,30 +141,6 @@ bool in_vcsno(std::filesystem::path file) {
 
     // Not targeted by any rule in the .vcsno file.
     return false;
-}
-
-
-std::string hash_file_blob(std::filesystem::path local_file) {
-    /* Create the hash for a blob at the given path. */
-    uintmax_t f_size = std::filesystem::file_size(local_file);
-    std::string header = std::format("blob {}", f_size) + '\0';
-
-    std::vector<uint8_t> blob;
-    for (char c : header) {
-        blob.push_back(static_cast<uint8_t>(c));
-    }
-    std::ifstream file(local_file, std::ios::binary);
-    std::vector<uint8_t> f_bytes(f_size);
-
-    if (f_size > 0) {
-        if (!file.read(reinterpret_cast<char *>(f_bytes.data()), f_size)) {
-            err_out(std::format("File {} could not be read.", local_file.string()));
-            return "";
-        }
-    }
-    blob.insert(blob.end(), f_bytes.begin(), f_bytes.end());
-    return sha1(blob);
-
 }
 
 void add_file(std::filesystem::path file) {
