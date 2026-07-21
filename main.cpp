@@ -15,11 +15,12 @@
 #include "utils/io.h"
 
 /* Core Imports */
-#include "core/config.h"
+#include "core/configuration.h"
 #include "core/index.h"
 
 /* Command Imports */
 #include "commands/add.h"
+#include "commands/config.h"
 #include "commands/init.h"
 #include "commands/status.h"
 
@@ -41,26 +42,6 @@ void help_menu() {
 void version_menu() {
     info_out(std::format("Version {}", VCS_VERSION_NUM));
     info_out(std::format("Find the most up-to-date version of VCS at {}", VCS_SOURCE_URL));
-}
-void handle_config(std::vector<std::string> args) {
-    if (args.size() == 2) {
-        // Display current config.
-        if (args.at(1) =="user.name" ) {
-            info_out(std::format("user.name = {}", user_name), true);
-        }
-        if (args.at(1) =="user.email" ) {
-            info_out(std::format("user.email = {}", user_email), true);
-        }
-    }
-    else if (args.size() == 3) {
-        if (args.at(1) == "user.name") {
-            user_name = args.at(2);
-        }
-        if (args.at(1) == "user.email") {
-            user_email = args.at(2);
-        }
-        store_config(vcs_dir, {user_name, user_email});
-    }
 }
 
 int main(int argc, char **argv) {
@@ -87,7 +68,7 @@ int main(int argc, char **argv) {
         version_menu();
     }
     else if (base_cmd == "--config") {
-        handle_config(args);
+        handle_config(vcs_dir, args, user_name, user_email);
     }
     else if (base_cmd == "init") {
         init_vcs(vcs_inited, vcs_dir, user_name, user_email);

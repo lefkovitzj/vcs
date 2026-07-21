@@ -11,7 +11,7 @@
 
 #include "../utils/io.h"
 
-#include "../core/config.h"
+#include "../core/configuration.h"
 
 
 void init_vcs(bool vcs_inited, std::filesystem::path vcs_dir, std::string user_name, std::string user_email) {

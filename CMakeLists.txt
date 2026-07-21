@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(vcs main.cpp
         utils/io.h
         utils/io.cpp
-        core/config.h
-        core/config.cpp
+        core/configuration.h
+        core/configuration.cpp
         utils/hashing.h
         utils/hashing.cpp
         utils/compress.h
@@ -26,4 +26,6 @@ add_executable(vcs main.cpp
         commands/status.cpp
         commands/status.h
         commands/add.cpp
-        commands/add.h)
+        commands/add.h
+        commands/config.cpp
+        commands/config.h)

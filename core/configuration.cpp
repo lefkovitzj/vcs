@@ -8,14 +8,14 @@
  * @author Joseph Lefkovitz (httsp://github.com/lefkovitzj)
  */
 
-#include "config.h"
+#include "configuration.h"
 
 #include <string>
 #include <filesystem>
 #include <fstream>
 #include <map>
 
-#include "../core/config.h"
+#include "../core/configuration.h"
 #include "../utils/io.h"
 
 void store_config(std::filesystem::path vcs_dir, vcs_config config) {
