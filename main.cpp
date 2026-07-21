@@ -43,16 +43,23 @@ void version_menu() {
     info_out(std::format("Find the most up-to-date version of VCS at {}", VCS_SOURCE_URL));
 }
 void handle_config(std::vector<std::string> args) {
-    if (args.size() <= 2) {
+    if (args.size() == 2) {
         // Display current config.
+        if (args.at(1) =="user.name" ) {
+            info_out(std::format("user.name = {}", user_name), true);
+        }
+        if (args.at(1) =="user.email" ) {
+            info_out(std::format("user.email = {}", user_email), true);
+        }
     }
-    else {
+    else if (args.size() == 3) {
         if (args.at(1) == "user.name") {
             user_name = args.at(2);
         }
         if (args.at(1) == "user.email") {
             user_email = args.at(2);
         }
+        store_config(vcs_dir, {user_name, user_email});
     }
 }
 
